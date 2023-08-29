@@ -28,7 +28,7 @@ hoteis = [
 
 class Hoteis(Resource):
     def get(self):
-        return {"hoteis": hoteis}
+        return {"hoteis": [hotel.json() for hotel in HotelModel.query.all()]}
 
 
 class Hotel(Resource):
@@ -48,28 +48,27 @@ class Hotel(Resource):
         if HotelModel.find_hotel(id):
             return {"message": f"Hotel id '{id}' already exists."}, 400
 
-        dados = Hotel.argumentos.parse_args()  # pq não self.argumentos?
+        dados = Hotel.argumentos.parse_args()
         hotel = HotelModel(id, **dados)
         hotel.save_hotel()
         return hotel.json(), 201
 
     def put(self, id):
-        dados = Hotel.argumentos.parse_args()  # pq não self.argumentos?
-        hotel_obj = HotelModel(id, **dados)
-        novo_hotel = hotel_obj.json()
+        dados = Hotel.argumentos.parse_args()
+        hotel_encontrado = HotelModel.find_hotel(id)
 
-        hotel = Hotel.find_hotel(id)
-        if hotel:
-            hotel.update(novo_hotel)
-            return novo_hotel, 200
-        hoteis.append(novo_hotel)
-        return novo_hotel, 201
+        if hotel_encontrado:
+            hotel_encontrado.update_hotel(**dados)
+            hotel_encontrado.save_hotel()
+            return hotel_encontrado.json(), 200
+
+        hotel = HotelModel(id, **dados)
+        hotel.save()
+        return hotel.json(), 201
 
     def delete(self, id):
-        try:
-            hotel = Hotel.find_hotel(id)
-            index = hoteis.index(hotel)
-            del hoteis[index]
+        hotel = HotelModel.find_hotel(id)
+        if hotel:
+            hotel.delete_hotel()
             return {"message": "Hotel deleted."}
-        except ValueError:
-            return {"message": "Not a valid hotel."}
+        return {"message": "Not a valid hotel."}, 404
