@@ -16,7 +16,7 @@ def criar_banco():
 
 api.add_resource(Hoteis, "/hoteis")
 api.add_resource(Hotel, "/hoteis/<string:id>")
-api.add_resource(Usuario, "/usuario/<string:id>")
+api.add_resource(Usuario, "/usuarios/<int:id>")
 
 if __name__ == "__main__":
     from sql_alchemy import banco
